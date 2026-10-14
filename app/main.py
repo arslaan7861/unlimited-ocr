@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import health
+from app.api.routes import health, ui
 from app.api.v1 import v1_router
 from app.config.settings import get_settings
 from app.core.error_handlers import register_error_handlers
@@ -44,6 +44,7 @@ def create_application() -> FastAPI:
     register_error_handlers(app)
 
     # 4. Include Routers
+    app.include_router(ui.router)
     app.include_router(health.router)
     app.include_router(v1_router)
 

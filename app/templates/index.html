@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baidu Unlimited-OCR & LLM Document Parser</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .prose table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    .prose th, .prose td { border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; text-align: left; }
+    .prose th { background-color: #f8fafc; font-weight: 600; }
+    .tab-active { border-bottom: 2px solid #3b82f6; color: #2563eb; font-weight: 600; }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-lg shadow-md">
+          <i class="fa-solid fa-file-invoice"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-slate-900 leading-tight">Unlimited-OCR & LLM Parser</h1>
+          <p class="text-xs text-slate-500">Baidu Unlimited-OCR + GPT-4o-mini Semantic Structuring</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <a href="/docs" target="_blank" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-medium transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-code"></i>
+          <span>Swagger Docs</span>
+        </a>
+        <a href="/health" target="_blank" class="text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg font-medium flex items-center space-x-1.5 border border-emerald-200">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Health Probe</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+    <!-- Upload & Controls Column -->
+    <div class="lg:col-span-5 space-y-6">
+      
+      <!-- Upload Card -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+        <h2 class="text-base font-semibold text-slate-900 mb-4 flex items-center space-x-2">
+          <i class="fa-solid fa-cloud-arrow-up text-blue-600"></i>
+          <span>Document Ingestion</span>
+        </h2>
+
+        <!-- Drag & Drop Zone -->
+        <div id="dropzone" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-8 text-center cursor-pointer transition bg-slate-50/50 hover:bg-blue-50/30 group">
+          <input type="file" id="file-input" class="hidden" accept="image/png, image/jpeg, image/webp, application/pdf">
+          <div class="flex flex-col items-center justify-center space-y-2">
+            <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+              <i class="fa-solid fa-file-arrow-up"></i>
+            </div>
+            <p class="text-sm font-semibold text-slate-700">Click to upload or drag & drop</p>
+            <p class="text-xs text-slate-400">PDF, PNG, JPG, or WEBP (up to 25MB)</p>
+          </div>
+          <div id="file-preview" class="hidden mt-4 pt-4 border-t border-slate-200 flex items-center justify-between">
+            <div class="flex items-center space-x-2 truncate">
+              <i class="fa-solid fa-paperclip text-slate-400 text-sm"></i>
+              <span id="file-name" class="text-xs font-medium text-slate-800 truncate"></span>
+            </div>
+            <button type="button" id="remove-file-btn" class="text-red-500 hover:text-red-700 text-xs">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Extraction Options -->
+        <div class="mt-5 space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Document Type</label>
+            <select id="doc-type-select" class="w-full text-xs bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="general">General Document (Default)</option>
+              <option value="invoice">Invoice / Bill</option>
+              <option value="receipt">Sales Receipt</option>
+              <option value="table">Tabular Data / Financial Report</option>
+              <option value="contract">Legal Agreement / Contract</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Custom Extraction Instruction (Optional)</label>
+            <textarea id="custom-prompt-input" rows="2" placeholder="e.g. Extract invoice number, vendor name, and line items table as JSON" class="w-full text-xs bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400"></textarea>
+          </div>
+
+          <div class="pt-2">
+            <button id="process-btn" disabled class="w-full py-2.5 px-4 rounded-xl font-medium text-sm text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed shadow transition flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>Extract & Parse Document</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Pipeline Info Card -->
+      <div class="bg-gradient-to-br from-indigo-50 to-blue-50 border border-blue-100 rounded-2xl p-5 text-xs text-slate-600 space-y-2">
+        <div class="font-semibold text-blue-900 flex items-center space-x-1.5">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>How It Works</span>
+        </div>
+        <p>1. <strong>Baidu Unlimited-OCR</strong> performs high-resolution spatial character and layout recognition.</p>
+        <p>2. <strong>GPT-4o-mini</strong> cleans OCR artifacts and extracts structured entities into JSON & Markdown.</p>
+      </div>
+
+    </div>
+
+    <!-- Results Display Column -->
+    <div class="lg:col-span-7 flex flex-col">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
+        
+        <!-- Tabs Header -->
+        <div class="border-b border-slate-200 px-6 flex items-center justify-between">
+          <div class="flex space-x-6">
+            <button class="tab-btn py-4 text-xs font-medium text-slate-500 hover:text-slate-700 tab-active" data-tab="markdown">
+              <i class="fa-solid fa-file-lines mr-1.5"></i>Rendered Markdown
+            </button>
+            <button class="tab-btn py-4 text-xs font-medium text-slate-500 hover:text-slate-700" data-tab="json">
+              <i class="fa-solid fa-code mr-1.5"></i>Structured JSON
+            </button>
+            <button class="tab-btn py-4 text-xs font-medium text-slate-500 hover:text-slate-700" data-tab="raw">
+              <i class="fa-solid fa-align-left mr-1.5"></i>Raw OCR
+            </button>
+            <button class="tab-btn py-4 text-xs font-medium text-slate-500 hover:text-slate-700" data-tab="benchmark">
+              <i class="fa-solid fa-chart-simple mr-1.5"></i>Benchmarks
+            </button>
+          </div>
+          <div id="copy-container" class="hidden">
+            <button id="copy-btn" class="text-xs text-slate-500 hover:text-blue-600 transition flex items-center space-x-1">
+              <i class="fa-regular fa-copy"></i>
+              <span>Copy</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tab Content Viewport -->
+        <div class="p-6 flex-1 overflow-y-auto max-h-[700px] relative">
+          
+          <!-- Empty State -->
+          <div id="empty-state" class="h-full flex flex-col items-center justify-center text-center py-20 text-slate-400">
+            <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-2xl mb-3 text-slate-400">
+              <i class="fa-solid fa-arrow-left"></i>
+            </div>
+            <p class="text-sm font-medium text-slate-600">No Document Processed</p>
+            <p class="text-xs text-slate-400 mt-1 max-w-sm">Upload an image or PDF on the left and click Extract & Parse to view structured presentation.</p>
+          </div>
+
+          <!-- Loading State -->
+          <div id="loading-state" class="hidden h-full flex flex-col items-center justify-center text-center py-20">
+            <div class="relative w-16 h-16 mb-4">
+              <div class="absolute inset-0 rounded-full border-4 border-blue-200 animate-ping"></div>
+              <div class="absolute inset-0 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
+            </div>
+            <p id="loading-status" class="text-sm font-semibold text-slate-800">Processing Document...</p>
+            <p class="text-xs text-slate-400 mt-1">Extracting characters via Unlimited-OCR and structuring with LLM</p>
+          </div>
+
+          <!-- Tab 1: Rendered Markdown -->
+          <div id="tab-markdown" class="hidden prose max-w-none text-slate-800 text-sm"></div>
+
+          <!-- Tab 2: Structured JSON -->
+          <div id="tab-json" class="hidden">
+            <pre class="bg-slate-900 text-emerald-400 p-4 rounded-xl text-xs font-mono overflow-x-auto leading-relaxed"><code id="json-code"></code></pre>
+          </div>
+
+          <!-- Tab 3: Raw OCR Text -->
+          <div id="tab-raw" class="hidden">
+            <pre class="bg-slate-50 border border-slate-200 text-slate-700 p-4 rounded-xl text-xs font-mono overflow-x-auto whitespace-pre-wrap leading-relaxed" id="raw-code"></pre>
+          </div>
+
+          <!-- Tab 4: Benchmarks -->
+          <div id="tab-benchmark" class="hidden space-y-4">
+            <div class="grid grid-cols-3 gap-4">
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+                <p class="text-xs text-slate-500 font-medium">OCR Inference</p>
+                <p id="bench-ocr" class="text-lg font-bold text-blue-600 mt-1">0.0s</p>
+              </div>
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+                <p class="text-xs text-slate-500 font-medium">LLM Structuring</p>
+                <p id="bench-llm" class="text-lg font-bold text-indigo-600 mt-1">0.0s</p>
+              </div>
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+                <p class="text-xs text-slate-500 font-medium">Total Duration</p>
+                <p id="bench-total" class="text-lg font-bold text-emerald-600 mt-1">0.0s</p>
+              </div>
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs space-y-1">
+              <p><strong>Processed File:</strong> <span id="bench-file">-</span></p>
+              <p><strong>Document Type:</strong> <span id="bench-type">-</span></p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+    const filePreview = document.getElementById('file-preview');
+    const fileName = document.getElementById('file-name');
+    const removeFileBtn = document.getElementById('remove-file-btn');
+    const processBtn = document.getElementById('process-btn');
+    const docTypeSelect = document.getElementById('doc-type-select');
+    const customPromptInput = document.getElementById('custom-prompt-input');
+
+    const emptyState = document.getElementById('empty-state');
+    const loadingState = document.getElementById('loading-state');
+    const copyContainer = document.getElementById('copy-container');
+    const copyBtn = document.getElementById('copy-btn');
+
+    let currentFile = null;
+    let currentResult = null;
+    let activeTab = 'markdown';
+
+    // Drag and drop handlers
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('border-blue-500', 'bg-blue-50/50'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('border-blue-500', 'bg-blue-50/50'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('border-blue-500', 'bg-blue-50/50');
+      if (e.dataTransfer.files.length > 0) handleFileSelect(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) handleFileSelect(fileInput.files[0]);
+    });
+
+    function handleFileSelect(file) {
+      currentFile = file;
+      fileName.textContent = file.name;
+      filePreview.classList.remove('hidden');
+      processBtn.disabled = false;
+    }
+
+    removeFileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentFile = null;
+      fileInput.value = '';
+      filePreview.classList.add('hidden');
+      processBtn.disabled = true;
+    });
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+        btn.classList.add('tab-active');
+        activeTab = btn.getAttribute('data-tab');
+        renderActiveTab();
+      });
+    });
+
+    function renderActiveTab() {
+      if (!currentResult) return;
+      ['markdown', 'json', 'raw', 'benchmark'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+      });
+      document.getElementById(`tab-${activeTab}`).classList.remove('hidden');
+    }
+
+    // Process submission
+    processBtn.addEventListener('click', async () => {
+      if (!currentFile) return;
+
+      emptyState.classList.add('hidden');
+      ['markdown', 'json', 'raw', 'benchmark'].forEach(t => document.getElementById(`tab-${t}`).classList.add('hidden'));
+      loadingState.classList.remove('hidden');
+      processBtn.disabled = true;
+
+      const isPdf = currentFile.type === 'application/pdf' || currentFile.name.toLowerCase().endsWith('.pdf');
+      const endpoint = isPdf ? '/api/v1/ocr/pdf/parse' : '/api/v1/ocr/image/parse';
+
+      const formData = new FormData();
+      formData.append('file', currentFile);
+      formData.append('document_type', docTypeSelect.value);
+      if (customPromptInput.value.trim()) {
+        formData.append('custom_prompt', customPromptInput.value.trim());
+      }
+
+      try {
+        const response = await fetch(endpoint, { method: 'POST', body: formData });
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          alert('Error: ' + (data.message || 'Processing failed'));
+          loadingState.classList.add('hidden');
+          emptyState.classList.remove('hidden');
+          processBtn.disabled = false;
+          return;
+        }
+
+        currentResult = data;
+        loadingState.classList.add('hidden');
+        copyContainer.classList.remove('hidden');
+
+        // Populate tabs
+        document.getElementById('tab-markdown').innerHTML = marked.parse(data.cleaned_markdown || data.raw_text);
+        document.getElementById('json-code').textContent = JSON.stringify(data.structured_data || {}, null, 2);
+        document.getElementById('raw-code').textContent = data.raw_text;
+
+        document.getElementById('bench-ocr').textContent = `${data.ocr_time_seconds}s`;
+        document.getElementById('bench-llm').textContent = `${data.llm_time_seconds}s`;
+        document.getElementById('bench-total').textContent = `${data.total_time_seconds}s`;
+        document.getElementById('bench-file').textContent = data.filename;
+        document.getElementById('bench-type').textContent = data.document_type;
+
+        renderActiveTab();
+
+      } catch (err) {
+        alert('Request failed: ' + err.message);
+        loadingState.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+      } finally {
+        processBtn.disabled = false;
+      }
+    });
+
+    // Copy to clipboard
+    copyBtn.addEventListener('click', () => {
+      if (!currentResult) return;
+      let textToCopy = '';
+      if (activeTab === 'markdown') textToCopy = currentResult.cleaned_markdown;
+      else if (activeTab === 'json') textToCopy = JSON.stringify(currentResult.structured_data, null, 2);
+      else if (activeTab === 'raw') textToCopy = currentResult.raw_text;
+      else textToCopy = JSON.stringify(currentResult, null, 2);
+
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        copyBtn.innerHTML = '<i class="fa-solid fa-check text-emerald-500"></i><span class="text-emerald-500">Copied!</span>';
+        setTimeout(() => {
+          copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i><span>Copy</span>';
+        }, 2000);
+      });
+    });
+  </script>
+
+</body>
+</html>
