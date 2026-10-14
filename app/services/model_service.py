@@ -168,20 +168,27 @@ class ModelService:
 
             temp_out_dir = tempfile.mkdtemp(prefix="unlimited_ocr_out_")
 
-            # Call Unlimited-OCR model infer method
-            result = self.model.infer(
-                self.tokenizer,
-                prompt="<image>document parsing.",
-                image_file=temp_file_path,
-                output_path=temp_out_dir,
-                eval_mode=True,
-                base_size=1024,
-                image_size=640,
-                crop_mode=True,
-                max_length=32768,
-                no_repeat_ngram_size=35,
-                ngram_window=128,
-            )
+            import torch
+
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
+            # Use Base mode (crop_mode=False, image_size=1024, max_length=4096)
+            # to preserve VRAM headroom on 16GB GPUs like the NVIDIA T4
+            with torch.inference_mode():
+                result = self.model.infer(
+                    self.tokenizer,
+                    prompt="<image>document parsing.",
+                    image_file=temp_file_path,
+                    output_path=temp_out_dir,
+                    eval_mode=True,
+                    base_size=1024,
+                    image_size=1024,
+                    crop_mode=False,
+                    max_length=4096,
+                    no_repeat_ngram_size=35,
+                    ngram_window=128,
+                )
 
             if result is None:
                 return ""
@@ -206,6 +213,13 @@ class ModelService:
                     pass
             if temp_out_dir and os.path.exists(temp_out_dir):
                 shutil.rmtree(temp_out_dir, ignore_errors=True)
+            try:
+                import torch
+
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+            except Exception:
+                pass
 
     def predict_images(self, images: list[Image.Image]) -> list[str]:
         """Run OCR extraction sequentially across a list of PIL Images.

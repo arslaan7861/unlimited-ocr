@@ -70,7 +70,7 @@ class Settings(BaseSettings):
     max_concurrent_inferences: int = Field(
         default=2, ge=1, le=16, description="Max concurrent inference jobs"
     )
-    pdf_dpi: int = Field(default=300, ge=72, le=600, description="DPI for PDF page rasterization")
+    pdf_dpi: int = Field(default=150, ge=72, le=600, description="DPI for PDF page rasterization")
 
     cors_origins: list[str] = Field(default=["*"], description="Allowed CORS origin hosts")
 
