@@ -1,0 +1,5 @@
+"""Configuration package for the Unlimited-OCR service."""
+
+from app.config.settings import Settings, get_settings
+
+__all__ = ["Settings", "get_settings"]
