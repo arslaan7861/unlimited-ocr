@@ -100,7 +100,7 @@ async def ocr_pdf(
 async def ocr_image_parse(
     request: Request,
     file: UploadFile = File(..., description="Image file (PNG, JPEG, WEBP)"),
-    document_type: str = Form(default="general", description="Document type"),
+    document_type: str = Form(default="auto", description="Document type hint or 'auto'"),
     custom_prompt: str | None = Form(default=None, description="Custom prompt"),
     settings: Settings = Depends(get_settings),
 ) -> StructuredDocumentResponse:
@@ -109,7 +109,7 @@ async def ocr_image_parse(
     Args:
         request (Request): Active HTTP request.
         file (UploadFile): Uploaded multipart image file.
-        document_type (str): Type of document (general, invoice, receipt, contract, table).
+        document_type (str): Type of document hint or 'auto'.
         custom_prompt (str | None): Optional specific extraction instructions.
         settings (Settings): Active application configuration.
 
@@ -174,7 +174,7 @@ async def ocr_image_parse(
 async def ocr_pdf_parse(
     request: Request,
     file: UploadFile = File(..., description="PDF document (application/pdf)"),
-    document_type: str = Form(default="general", description="Document type"),
+    document_type: str = Form(default="auto", description="Document type hint or 'auto'"),
     custom_prompt: str | None = Form(default=None, description="Custom prompt"),
     settings: Settings = Depends(get_settings),
 ) -> StructuredDocumentResponse:
@@ -183,7 +183,7 @@ async def ocr_pdf_parse(
     Args:
         request (Request): Active HTTP request.
         file (UploadFile): Uploaded multipart PDF document.
-        document_type (str): Type of document (general, invoice, receipt, contract, table).
+        document_type (str): Type of document hint or 'auto'.
         custom_prompt (str | None): Optional specific extraction instructions.
         settings (Settings): Active application configuration.
 

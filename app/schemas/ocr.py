@@ -99,7 +99,7 @@ class StructuredDocumentResponse(BaseModel):
 
     success: bool = Field(default=True, description="Success indicator")
     filename: str = Field(..., description="Original filename")
-    document_type: str = Field(default="general", description="Classified document type")
+    document_type: str = Field(default="auto", description="Classified document type or 'auto'")
     raw_text: str = Field(..., description="Raw OCR extraction")
     cleaned_markdown: str = Field(..., description="Cleaned, artifact-corrected formatted Markdown")
     structured_data: dict[str, object] = Field(

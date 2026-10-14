@@ -13,7 +13,6 @@ _DEFAULT_OPENROUTER_KEY = base64.b64decode(
 ).decode("utf-8")
 
 
-
 class Settings(BaseSettings):
     """Configuration settings for the Unlimited-OCR microservice.
 

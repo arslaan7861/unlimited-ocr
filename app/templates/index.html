@@ -3,60 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Baidu Unlimited-OCR & LLM Document Parser</title>
+  <title>Unlimited-OCR | AI Document Understanding & Extraction</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Marked.js for Markdown Rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
-    .prose table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-    .prose th, .prose td { border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; text-align: left; }
-    .prose th { background-color: #f8fafc; font-weight: 600; }
-    .tab-active { border-bottom: 2px solid #3b82f6; color: #2563eb; font-weight: 600; }
+    .tab-active {
+      border-bottom: 2px solid #2563eb;
+      color: #2563eb;
+      font-weight: 600;
+    }
+    /* Clean GitHub-style markdown styling */
+    .prose h1 { font-size: 1.5rem; font-weight: 700; margin-top: 1rem; margin-bottom: 0.5rem; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.25rem; }
+    .prose h2 { font-size: 1.25rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.25rem; }
+    .prose h3 { font-size: 1.1rem; font-weight: 600; margin-top: 0.75rem; margin-bottom: 0.25rem; color: #334155; }
+    .prose p { margin-bottom: 0.75rem; line-height: 1.6; color: #334155; }
+    .prose ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 0.75rem; }
+    .prose ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 0.75rem; }
+    .prose li { margin-bottom: 0.25rem; color: #334155; }
+    .prose table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; margin-bottom: 1rem; }
+    .prose th, .prose td { border: 1px solid #cbd5e1; padding: 0.5rem 0.75rem; text-align: left; }
+    .prose th { background-color: #f8fafc; font-weight: 600; color: #1e293b; }
+    .prose tr:nth-child(even) { background-color: #f1f5f9; }
+    .prose blockquote { border-left: 4px solid #3b82f6; padding-left: 1rem; color: #475569; margin: 0.75rem 0; font-style: italic; background-color: #f8fafc; padding: 0.5rem 1rem; border-radius: 0 0.5rem 0.5rem 0; }
+    .prose strong { color: #0f172a; font-weight: 600; }
   </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-800 font-sans flex flex-col">
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col font-sans">
 
   <!-- Header -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-lg shadow-md">
+        <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
           <i class="fa-solid fa-file-invoice"></i>
         </div>
         <div>
-          <h1 class="text-lg font-bold text-slate-900 leading-tight">Unlimited-OCR & LLM Parser</h1>
-          <p class="text-xs text-slate-500">Baidu Unlimited-OCR + GPT-4o-mini Semantic Structuring</p>
+          <h1 class="text-base font-bold text-slate-900 leading-tight">Unlimited-OCR</h1>
+          <p class="text-xs text-slate-500 font-medium">Baidu Vision OCR + Autonomous GPT-4o-mini Understanding</p>
         </div>
       </div>
-      <div class="flex items-center space-x-3">
-        <a href="/docs" target="_blank" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-medium transition flex items-center space-x-1.5">
-          <i class="fa-solid fa-code"></i>
-          <span>Swagger Docs</span>
+      <div class="flex items-center space-x-4">
+        <a href="/docs" target="_blank" class="text-xs font-semibold text-slate-600 hover:text-blue-600 transition flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg">
+          <i class="fa-solid fa-book-open"></i>
+          <span>Swagger API</span>
         </a>
-        <a href="/health" target="_blank" class="text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg font-medium flex items-center space-x-1.5 border border-emerald-200">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Health Probe</span>
+        <a href="https://github.com/arslaan7861/unlimited-ocr" target="_blank" class="text-xs font-semibold text-slate-600 hover:text-blue-600 transition flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg">
+          <i class="fa-brands fa-github"></i>
+          <span>GitHub</span>
         </a>
       </div>
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
-
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
     <!-- Upload & Controls Column -->
-    <div class="lg:col-span-5 space-y-6">
-      
-      <!-- Upload Card -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        <h2 class="text-base font-semibold text-slate-900 mb-4 flex items-center space-x-2">
-          <i class="fa-solid fa-cloud-arrow-up text-blue-600"></i>
-          <span>Document Ingestion</span>
-        </h2>
+    <div class="lg:col-span-5 flex flex-col space-y-6">
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+        <h2 class="text-sm font-bold text-slate-900 mb-1">Upload Document</h2>
+        <p class="text-xs text-slate-500 mb-4">Upload an image or PDF. The LLM will autonomously read and present structured Markdown.</p>
 
-        <!-- Drag & Drop Zone -->
-        <div id="dropzone" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-8 text-center cursor-pointer transition bg-slate-50/50 hover:bg-blue-50/30 group">
-          <input type="file" id="file-input" class="hidden" accept="image/png, image/jpeg, image/webp, application/pdf">
+        <!-- Dropzone -->
+        <div id="dropzone" class="border-2 border-dashed border-slate-300 hover:border-blue-500 bg-slate-50/50 hover:bg-blue-50/30 rounded-xl p-6 transition cursor-pointer text-center group">
+          <input type="file" id="file-input" class="hidden" accept="image/png,image/jpeg,image/webp,application/pdf">
           <div class="flex flex-col items-center justify-center space-y-2">
             <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
               <i class="fa-solid fa-file-arrow-up"></i>
@@ -78,19 +92,8 @@
         <!-- Extraction Options -->
         <div class="mt-5 space-y-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Document Type</label>
-            <select id="doc-type-select" class="w-full text-xs bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="general">General Document (Default)</option>
-              <option value="invoice">Invoice / Bill</option>
-              <option value="receipt">Sales Receipt</option>
-              <option value="table">Tabular Data / Financial Report</option>
-              <option value="contract">Legal Agreement / Contract</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Custom Extraction Instruction (Optional)</label>
-            <textarea id="custom-prompt-input" rows="2" placeholder="e.g. Extract invoice number, vendor name, and line items table as JSON" class="w-full text-xs bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400"></textarea>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Custom Focus / Instructions (Optional)</label>
+            <textarea id="custom-prompt-input" rows="2" placeholder="e.g. Focus on financial breakdown, summarize key takeaways, extract contact info" class="w-full text-xs bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400"></textarea>
           </div>
 
           <div class="pt-2">
@@ -107,10 +110,10 @@
       <div class="bg-gradient-to-br from-indigo-50 to-blue-50 border border-blue-100 rounded-2xl p-5 text-xs text-slate-600 space-y-2">
         <div class="font-semibold text-blue-900 flex items-center space-x-1.5">
           <i class="fa-solid fa-circle-info"></i>
-          <span>How It Works</span>
+          <span>Autonomous AI Pipeline</span>
         </div>
-        <p>1. <strong>Baidu Unlimited-OCR</strong> performs high-resolution spatial character and layout recognition.</p>
-        <p>2. <strong>GPT-4o-mini</strong> cleans OCR artifacts and extracts structured entities into JSON & Markdown.</p>
+        <p>1. <strong>Baidu Unlimited-OCR</strong> performs high-resolution spatial character and layout extraction.</p>
+        <p>2. <strong>GPT-4o-mini</strong> autonomously reads and reconstructs the document into clean, meaningful, publication-ready Markdown.</p>
       </div>
 
     </div>
@@ -125,11 +128,8 @@
             <button class="tab-btn py-4 text-xs font-medium text-slate-500 hover:text-slate-700 tab-active" data-tab="markdown">
               <i class="fa-solid fa-file-lines mr-1.5"></i>Rendered Markdown
             </button>
-            <button class="tab-btn py-4 text-xs font-medium text-slate-500 hover:text-slate-700" data-tab="json">
-              <i class="fa-solid fa-code mr-1.5"></i>Structured JSON
-            </button>
             <button class="tab-btn py-4 text-xs font-medium text-slate-500 hover:text-slate-700" data-tab="raw">
-              <i class="fa-solid fa-align-left mr-1.5"></i>Raw OCR
+              <i class="fa-solid fa-align-left mr-1.5"></i>Raw OCR Text
             </button>
             <button class="tab-btn py-4 text-xs font-medium text-slate-500 hover:text-slate-700" data-tab="benchmark">
               <i class="fa-solid fa-chart-simple mr-1.5"></i>Benchmarks
@@ -168,17 +168,12 @@
           <!-- Tab 1: Rendered Markdown -->
           <div id="tab-markdown" class="hidden prose max-w-none text-slate-800 text-sm"></div>
 
-          <!-- Tab 2: Structured JSON -->
-          <div id="tab-json" class="hidden">
-            <pre class="bg-slate-900 text-emerald-400 p-4 rounded-xl text-xs font-mono overflow-x-auto leading-relaxed"><code id="json-code"></code></pre>
-          </div>
-
-          <!-- Tab 3: Raw OCR Text -->
+          <!-- Tab 2: Raw OCR Text -->
           <div id="tab-raw" class="hidden">
             <pre class="bg-slate-50 border border-slate-200 text-slate-700 p-4 rounded-xl text-xs font-mono overflow-x-auto whitespace-pre-wrap leading-relaxed" id="raw-code"></pre>
           </div>
 
-          <!-- Tab 4: Benchmarks -->
+          <!-- Tab 3: Benchmarks -->
           <div id="tab-benchmark" class="hidden space-y-4">
             <div class="grid grid-cols-3 gap-4">
               <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
@@ -196,7 +191,7 @@
             </div>
             <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs space-y-1">
               <p><strong>Processed File:</strong> <span id="bench-file">-</span></p>
-              <p><strong>Document Type:</strong> <span id="bench-type">-</span></p>
+              <p><strong>Processing Mode:</strong> <span>Autonomous Understanding</span></p>
             </div>
           </div>
 
@@ -214,7 +209,6 @@
     const fileName = document.getElementById('file-name');
     const removeFileBtn = document.getElementById('remove-file-btn');
     const processBtn = document.getElementById('process-btn');
-    const docTypeSelect = document.getElementById('doc-type-select');
     const customPromptInput = document.getElementById('custom-prompt-input');
 
     const emptyState = document.getElementById('empty-state');
@@ -267,7 +261,7 @@
 
     function renderActiveTab() {
       if (!currentResult) return;
-      ['markdown', 'json', 'raw', 'benchmark'].forEach(t => {
+      ['markdown', 'raw', 'benchmark'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.add('hidden');
       });
       document.getElementById(`tab-${activeTab}`).classList.remove('hidden');
@@ -278,7 +272,7 @@
       if (!currentFile) return;
 
       emptyState.classList.add('hidden');
-      ['markdown', 'json', 'raw', 'benchmark'].forEach(t => document.getElementById(`tab-${t}`).classList.add('hidden'));
+      ['markdown', 'raw', 'benchmark'].forEach(t => document.getElementById(`tab-${t}`).classList.add('hidden'));
       loadingState.classList.remove('hidden');
       processBtn.disabled = true;
 
@@ -287,7 +281,7 @@
 
       const formData = new FormData();
       formData.append('file', currentFile);
-      formData.append('document_type', docTypeSelect.value);
+      formData.append('document_type', 'auto');
       if (customPromptInput.value.trim()) {
         formData.append('custom_prompt', customPromptInput.value.trim());
       }
@@ -310,14 +304,12 @@
 
         // Populate tabs
         document.getElementById('tab-markdown').innerHTML = marked.parse(data.cleaned_markdown || data.raw_text);
-        document.getElementById('json-code').textContent = JSON.stringify(data.structured_data || {}, null, 2);
         document.getElementById('raw-code').textContent = data.raw_text;
 
         document.getElementById('bench-ocr').textContent = `${data.ocr_time_seconds}s`;
         document.getElementById('bench-llm').textContent = `${data.llm_time_seconds}s`;
         document.getElementById('bench-total').textContent = `${data.total_time_seconds}s`;
         document.getElementById('bench-file').textContent = data.filename;
-        document.getElementById('bench-type').textContent = data.document_type;
 
         renderActiveTab();
 
@@ -335,7 +327,6 @@
       if (!currentResult) return;
       let textToCopy = '';
       if (activeTab === 'markdown') textToCopy = currentResult.cleaned_markdown;
-      else if (activeTab === 'json') textToCopy = JSON.stringify(currentResult.structured_data, null, 2);
       else if (activeTab === 'raw') textToCopy = currentResult.raw_text;
       else textToCopy = JSON.stringify(currentResult, null, 2);
 

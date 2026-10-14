@@ -1,7 +1,7 @@
-"""LLM document parsing service using OpenRouter for markdown cleanup and JSON structuring."""
+"""LLM document parsing service using OpenRouter for autonomous markdown reconstruction."""
 
-import json
 import logging
+import re
 from typing import Any
 
 import httpx
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class LLMDocumentParser:
-    """Service to clean up and structure raw OCR text into markdown and JSON entities.
+    """Service to understand raw OCR text and reconstruct it into meaningful Markdown.
 
     Attributes:
         settings (Settings): Active application configuration.
@@ -29,47 +29,44 @@ class LLMDocumentParser:
     async def parse_document(
         self,
         raw_text: str,
-        document_type: str = "general",
+        document_type: str = "auto",
         custom_prompt: str | None = None,
     ) -> tuple[str, dict[str, Any]]:
-        """Parse raw OCR text into cleaned Markdown and structured JSON.
+        """Understand raw OCR text and reconstruct it into meaningful Markdown.
 
         Args:
             raw_text (str): Raw text extracted by Unlimited-OCR.
-            document_type (str): Type of document (e.g. 'general', 'invoice', 'receipt', 'table').
+            document_type (str): Optional hint or 'auto' for autonomous deduction.
             custom_prompt (str | None): Optional specific instructions for extraction.
 
         Returns:
-            tuple[str, dict[str, Any]]: (cleaned_markdown, structured_data_dict).
+            tuple[str, dict[str, Any]]: (cleaned_markdown, empty_dict).
         """
         if not self.settings.llm_enabled or not self.settings.llm_api_key:
             logger.info("LLM parsing is disabled or unconfigured; returning raw text.")
             return raw_text, {}
 
         system_instruction = (
-            "You are an expert AI document parsing assistant. You are given raw OCR text extracted "
-            "from a scanned document or image by Baidu Unlimited-OCR.\n"
-            "Your task is to:\n"
-            "1. Clean up and format the document text into crisp, readable GitHub-flavored Markdown. "
-            "Fix OCR misspellings, restore proper paragraph line-breaks, and format tables accurately.\n"
-            "2. Extract structured key-value entities, numbers, dates, organizations, and line items "
-            "into a clean JSON structure.\n\n"
-            f"Document classification context: {document_type.upper()}\n"
-            "You MUST respond ONLY with a valid JSON object matching this schema:\n"
-            "{\n"
-            '  "cleaned_markdown": "Full cleaned and formatted markdown representation of the document",\n'
-            '  "structured_data": {\n'
-            '    "document_type": "' + document_type + '",\n'
-            '    "summary": "1-2 sentence summary",\n'
-            '    "entities": { ... key fields, totals, dates, names ... },\n'
-            '    "tables": [ ... any table data as array of objects ... ]\n'
-            "  }\n"
-            "}"
+            "You are an expert AI document understanding and restructuring assistant. You are given "
+            "raw OCR text extracted from an image or scanned document by Baidu Unlimited-OCR.\n\n"
+            "Your objective:\n"
+            "1. Read and understand the text autonomously to deduce the document's type and intent "
+            "(e.g. resume, cover letter, invoice, receipt, legal contract, report, article, form, table).\n"
+            "2. Strip away any residual OCR noise, bounding box coordinates, or tags "
+            "(such as <|det|>...<|/det|> or <|ref|>...<|/ref|>).\n"
+            "3. Reconstruct the document into clean, meaningful, highly structured GitHub-Flavored Markdown:\n"
+            "   - Establish a logical heading hierarchy (# Title, ## Section, ### Sub-section).\n"
+            "   - Reconnect fragmented sentences and broken line breaks naturally.\n"
+            "   - Convert tabular data, columnar numbers, and itemized rows into clean, aligned Markdown tables.\n"
+            "   - Use clean bullet points or numbered lists where appropriate.\n"
+            "   - Emphasize key metadata (names, dates, totals, contact info) with bold formatting or blockquotes.\n"
+            "4. Output ONLY the meaningful markdown document itself. Do not wrap your response in an outer "
+            "```markdown code block, and do not add conversational pleasantries or preamble."
         )
 
-        user_content = f"Raw OCR Input:\n```\n{raw_text}\n```"
+        user_content = f"Raw OCR Input:\n\n{raw_text}"
         if custom_prompt:
-            user_content += f"\n\nAdditional User Request:\n{custom_prompt}"
+            user_content += f"\n\nUser Focus / Instructions:\n{custom_prompt}"
 
         url = f"{self.settings.llm_base_url.rstrip('/')}/chat/completions"
         headers = {
@@ -81,7 +78,6 @@ class LLMDocumentParser:
         payload = {
             "model": self.settings.llm_model,
             "temperature": self.settings.llm_temperature,
-            "response_format": {"type": "json_object"},
             "messages": [
                 {"role": "system", "content": system_instruction},
                 {"role": "user", "content": user_content},
@@ -101,12 +97,15 @@ class LLMDocumentParser:
                 return raw_text, {}
 
             data = response.json()
-            message_content = data["choices"][0]["message"]["content"]
-            parsed_result = json.loads(message_content)
+            raw_content = data["choices"][0]["message"]["content"].strip()
 
-            cleaned_markdown = parsed_result.get("cleaned_markdown", raw_text)
-            structured_data = parsed_result.get("structured_data", {})
-            return cleaned_markdown, structured_data
+            # Strip any outer markdown fences if the model included them
+            cleaned_markdown = raw_content
+            if cleaned_markdown.startswith("```"):
+                cleaned_markdown = re.sub(r"^```(?:markdown)?\s*\n?", "", cleaned_markdown)
+                cleaned_markdown = re.sub(r"\n?```$", "", cleaned_markdown).strip()
+
+            return cleaned_markdown, {}
 
         except Exception as exc:
             logger.warning(

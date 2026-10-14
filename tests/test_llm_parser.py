@@ -1,6 +1,5 @@
 """Tests for the LLM document parser and structured endpoints."""
 
-import json
 from unittest.mock import AsyncMock, patch
 
 import httpx
@@ -11,6 +10,23 @@ from app.config.settings import Settings
 from app.services.llm_parser import LLMDocumentParser
 
 
+def test_clean_ocr_tags():
+    """Test stripping Baidu Unlimited-OCR layout grounding tags."""
+    from app.services.model_service import clean_ocr_tags
+
+    raw_output = (
+        "<|det|>title [117, 106, 250, 122]<|/det|>Arslaan Ansari "
+        "<|det|>text [116, 128, 692, 146]<|/det|>Najibabad, India | +91-8273553959\n"
+        "<|ref|>Ref text<|/ref|><｜end of sentence｜>"
+    )
+    cleaned = clean_ocr_tags(raw_output)
+    assert "<|det|>" not in cleaned
+    assert "[117, 106, 250, 122]" not in cleaned
+    assert "<|ref|>" not in cleaned
+    assert "Arslaan Ansari" in cleaned
+    assert "Najibabad, India" in cleaned
+
+
 @pytest.mark.asyncio
 async def test_llm_parser_success(test_settings: Settings):
     """Test LLM document parser successfully processes raw text with mocked API."""
@@ -18,15 +34,7 @@ async def test_llm_parser_success(test_settings: Settings):
         "choices": [
             {
                 "message": {
-                    "content": json.dumps(
-                        {
-                            "cleaned_markdown": "# Invoice\n**Total:** $500",
-                            "structured_data": {
-                                "document_type": "invoice",
-                                "total": 500,
-                            },
-                        }
-                    )
+                    "content": "# Invoice Document\n\n| Item | Cost |\n|---|---|\n| Service | $500 |\n\n**Total Due:** $500"
                 }
             }
         ]
@@ -40,11 +48,12 @@ async def test_llm_parser_success(test_settings: Settings):
 
     with patch("app.services.llm_parser.httpx.AsyncClient.post", return_value=mock_resp):
         cleaned_md, structured = await parser.parse_document(
-            raw_text="INVOICE Total $500", document_type="invoice"
+            raw_text="INVOICE Total $500", document_type="auto"
         )
 
-    assert "# Invoice" in cleaned_md
-    assert structured["total"] == 500
+    assert "# Invoice Document" in cleaned_md
+    assert "| Item | Cost |" in cleaned_md
+    assert structured == {}
 
 
 @pytest.mark.asyncio

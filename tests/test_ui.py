@@ -10,7 +10,7 @@ async def test_ui_root_endpoint(async_client: AsyncClient):
     response = await async_client.get("/")
     assert response.status_code == 200
     assert "text/html" in response.headers.get("content-type", "")
-    assert "Unlimited-OCR & LLM Parser" in response.text
+    assert "Unlimited-OCR" in response.text
     assert "dropzone" in response.text
 
 

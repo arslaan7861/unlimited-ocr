@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 import shutil
 import tempfile
 from typing import Any
@@ -12,6 +13,27 @@ from app.config.settings import Settings
 from app.core.exceptions import InferenceException
 
 logger = logging.getLogger(__name__)
+
+DET_PATTERN = re.compile(r"<\|det\|>.*?<\|/det\|>", re.DOTALL)
+REF_PATTERN = re.compile(r"<\|/?ref\|>", re.DOTALL)
+
+
+def clean_ocr_tags(text: str) -> str:
+    """Strip Baidu Unlimited-OCR layout grounding tags and special tokens.
+
+    Args:
+        text (str): Raw model output string containing detection and reference tags.
+
+    Returns:
+        str: Clean, human-readable text without bounding boxes or special tokens.
+    """
+    if not text:
+        return ""
+    text = DET_PATTERN.sub("", text)
+    text = REF_PATTERN.sub("", text)
+    text = text.replace("<｜end of sentence｜>", "").replace("<｜end▁of▁sentence｜>", "")
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
 
 
 class ModelService:
@@ -112,6 +134,15 @@ class ModelService:
             )
 
             self.model = self.model.eval()
+            if (
+                hasattr(self.model, "generation_config")
+                and self.model.generation_config is not None
+            ):
+                self.model.generation_config.max_new_tokens = 4096
+                self.model.generation_config.max_length = None
+                if self.tokenizer and hasattr(self.tokenizer, "eos_token_id"):
+                    self.model.generation_config.pad_token_id = self.tokenizer.eos_token_id
+
             if self.device == "cuda":
                 self.model = self.model.cuda()
             else:
@@ -193,8 +224,7 @@ class ModelService:
             if result is None:
                 return ""
 
-            cleaned = str(result).replace("<｜end▁of▁sentence｜>", "").strip()
-            return cleaned
+            return clean_ocr_tags(str(result))
 
         except Exception as exc:
             if isinstance(exc, InferenceException):
