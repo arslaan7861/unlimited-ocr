@@ -2,6 +2,7 @@
 
 import logging
 import os
+import shutil
 import tempfile
 from typing import Any
 
@@ -159,16 +160,20 @@ class ModelService:
             )
 
         temp_file_path: str | None = None
+        temp_out_dir: str | None = None
         try:
             with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
                 temp_file_path = tmp.name
                 image.save(tmp, format="PNG")
+
+            temp_out_dir = tempfile.mkdtemp(prefix="unlimited_ocr_out_")
 
             # Call Unlimited-OCR model infer method
             result = self.model.infer(
                 self.tokenizer,
                 prompt="<image>document parsing.",
                 image_file=temp_file_path,
+                output_path=temp_out_dir,
                 eval_mode=True,
                 base_size=1024,
                 image_size=640,
@@ -199,6 +204,8 @@ class ModelService:
                     os.remove(temp_file_path)
                 except OSError:
                     pass
+            if temp_out_dir and os.path.exists(temp_out_dir):
+                shutil.rmtree(temp_out_dir, ignore_errors=True)
 
     def predict_images(self, images: list[Image.Image]) -> list[str]:
         """Run OCR extraction sequentially across a list of PIL Images.
