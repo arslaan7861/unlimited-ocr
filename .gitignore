@@ -14,7 +14,8 @@ venv/
 
 # Environment variables
 .env
-.env.local
+.env.*
+!.env.example
 
 # Pytest and coverage
 .pytest_cache/
@@ -32,3 +33,21 @@ models/unlimited-ocr/*.bin
 models/unlimited-ocr/*.pt
 models/unlimited-ocr/*.pth
 models/unlimited-ocr/.cache/
+
+# Jupyter / Colab
+.ipynb_checkpoints/
+
+# IDE and Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary directories
+tmp/
+temp/
+*.tmp
