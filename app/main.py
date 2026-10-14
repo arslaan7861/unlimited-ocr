@@ -23,8 +23,8 @@ def create_application() -> FastAPI:
         title="Baidu Unlimited-OCR Microservice",
         description="Production-ready OCR microservice powered by Baidu Unlimited-OCR",
         version="0.1.0",
-        docs_url="/docs" if settings.environment != "production" else None,
-        redoc_url="/redoc" if settings.environment != "production" else None,
+        docs_url="/docs",
+        redoc_url="/redoc",
         lifespan=lifespan,
     )
 

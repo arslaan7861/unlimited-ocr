@@ -75,7 +75,14 @@ class ModelService:
 
         try:
             import torch
+            import transformers.utils.import_utils as tr_utils
             from transformers import AutoModel, AutoTokenizer
+
+            # Ensure compatibility with Baidu DeepSeek-V2 custom modeling code
+            if not hasattr(tr_utils, "is_torch_fx_available"):
+                tr_utils.is_torch_fx_available = lambda: True
+            if not hasattr(tr_utils, "is_torch_greater_or_equal_than_1_13"):
+                tr_utils.is_torch_greater_or_equal_than_1_13 = True
 
             dtype_map = {
                 "bfloat16": torch.bfloat16,
