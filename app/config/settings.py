@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO", description="Logging level")
 
     model_path: str = Field(
-        default="models/unlimited-ocr",
+        default="baidu/Unlimited-OCR",
         description="Path to model weights or HuggingFace ID",
         validation_alias=None,
     )
@@ -87,7 +87,7 @@ class Settings(BaseSettings):
         """
         if v:
             return v
-        return os.getenv("MODEL_DIR") or os.getenv("MODEL_ID_OR_PATH") or "models/unlimited-ocr"
+        return os.getenv("MODEL_DIR") or os.getenv("MODEL_ID_OR_PATH") or "baidu/Unlimited-OCR"
 
     @property
     def max_upload_size_bytes(self) -> int:
