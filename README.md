@@ -2,6 +2,8 @@
 
 Production-ready, modular FastAPI service powered by [Baidu Unlimited-OCR](https://github.com/baidu/Unlimited-OCR) for high-accuracy text extraction from images and scanned PDF documents.
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/arslaan7861/unlimited-ocr/blob/master/colab_unlimited_ocr.ipynb)
+
 ---
 
 ## Features
